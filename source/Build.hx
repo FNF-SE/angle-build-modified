@@ -176,10 +176,12 @@ class Build
 
 	public static function addAngleSetup(targetConfig:Config):Void
 	{
+		targetConfig.args.push('angle_assert_always_on=false');
 		targetConfig.args.push('angle_build_all=false');
 		targetConfig.args.push('angle_build_tests=false');
 		targetConfig.args.push('angle_has_frame_capture=false');
 		targetConfig.args.push('angle_has_histograms=false');
+		targetConfig.args.push('angle_has_rapidjson=false');
 		targetConfig.args.push('angle_standalone=true');
 	}
 
