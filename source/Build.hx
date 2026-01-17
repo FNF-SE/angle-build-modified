@@ -104,6 +104,24 @@ class Build
 									}
 								}
 							}
+						case 'linux':
+							for (file in FileSystem.readDirectory(targetConfig.getExportPath()))
+							{
+								for (lib in ANGLE_LIBS)
+								{
+									if (file.startsWith(lib) && Path.extension(file) == 'so')
+									{
+										try
+										{
+											FileUtil.createDirectory('$absBuildDir/lib/${targetConfig.cpu}');
+
+											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/lib/${targetConfig.cpu}/$file');
+										}
+										catch (e:Dynamic)
+											Sys.println(ANSIUtil.apply('Failed to copy "$file" because: $e.', [ANSICode.Bold, ANSICode.Yellow]));
+									}
+								}
+							}
 					}
 				}
 				else
