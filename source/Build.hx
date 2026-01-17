@@ -102,7 +102,7 @@ class Build
 				case 'windows':
 					final renderingBackends:Array<String> = [];
 
-					renderingBackends.push('angle_enable_d3d11=true');
+					renderingBackends.push('angle_enable_d3d11=false');
 					renderingBackends.push('angle_enable_d3d9=false');
 					renderingBackends.push('angle_enable_gl=false');
 					renderingBackends.push('angle_enable_metal=false');
