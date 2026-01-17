@@ -80,13 +80,13 @@ class Build
 										{
 											FileUtil.createDirectory('$absBuildDir/lib/${targetConfig.cpu}');
 
-											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/lib/${targetConfig.cpu}}/$file');
+											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/lib/${targetConfig.cpu}/$file');
 										}
 										else if (Path.extension(file) == 'dll')
 										{
 											FileUtil.createDirectory('$absBuildDir/bin/${targetConfig.cpu}');
 
-											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/bin/${targetConfig.cpu}}/$file');
+											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/bin/${targetConfig.cpu}/$file');
 										}
 									}
 								}
