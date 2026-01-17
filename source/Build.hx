@@ -8,8 +8,13 @@ import sys.io.File;
 import util.ANSIUtil;
 import util.FileUtil;
 
+using StringTools;
+
 class Build
 {
+	@:noCompletion
+	static final ANGLE_LIBS:Array<String> = ['libGLESv2', 'libEGL'];
+
 	@:noCompletion
 	static var buildPlatform:Null<String>;
 
@@ -42,6 +47,12 @@ class Build
 				File.saveContent('chrome/VERSION', chromeFileContent.join('\n'));
 			}
 
+			final absBuildDir:String = Path.normalize(FileSystem.absolutePath('../build'));
+
+			FileUtil.createDirectory('$absBuildDir/$buildPlatform/include');
+
+			FileUtil.copyDirectory('include', '$absBuildDir/$buildPlatform/include');
+
 			for (targetConfig in getBuildConfig())
 			{
 				FileUtil.createDirectory(targetConfig.getExportPath());
@@ -54,31 +65,32 @@ class Build
 					Sys.exit(1);
 				}
 
-				if (Sys.command('autoninja', ['-C', targetConfig.getExportPath(), 'libGLESv2', 'libEGL']) == 0)
+				if (Sys.command('autoninja', ['-C', targetConfig.getExportPath()].concat(ANGLE_LIBS)) == 0)
 				{
 					switch (buildPlatform)
 					{
 						case 'windows':
-							final absBuildDir:String = Path.normalize(FileSystem.absolutePath('../build'));
-
-							FileUtil.createDirectory('$absBuildDir/${targetConfig.getExportName()}/include');
-
-							FileUtil.copyDirectory('include', '$absBuildDir/${targetConfig.getExportName()}/include');
-
 							for (file in FileSystem.readDirectory(targetConfig.getExportPath()))
 							{
-								if (Path.extension(file) == 'lib')
+								for (lib in ANGLE_LIBS)
 								{
-									FileUtil.createDirectory('$absBuildDir/${targetConfig.getExportName()}/lib');
+									if (file.startsWith(lib))
+									{
+										if (Path.extension(file) == 'lib')
+										{
+											FileUtil.createDirectory('$absBuildDir/lib/${targetConfig.cpu}');
 
-									File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/${targetConfig.getExportName()}/lib/$file');
-								}
-								else if (Path.extension(file) == 'dll')
-								{
-									FileUtil.createDirectory('$absBuildDir/${targetConfig.getExportName()}/bin');
+											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/lib/${targetConfig.cpu}}/$file');
+										}
+										else if (Path.extension(file) == 'dll')
+										{
+											FileUtil.createDirectory('$absBuildDir/bin/${targetConfig.cpu}');
 
-									File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/${targetConfig.getExportName()}/bin/$file');
+											File.copy('${targetConfig.getExportPath()}/$file', '$absBuildDir/bin/${targetConfig.cpu}}/$file');
+										}
+									}
 								}
+
 							}
 					}
 				}
@@ -122,17 +134,17 @@ class Build
 					targetConfigX64.args = targetConfigX64.args.concat(renderingBackends);
 					targetConfigs.push(targetConfigX64);
 
-					// final targetConfigARM64:Config = getDefaultTargetPlatform();
-					// targetConfigARM64.os = 'win';
-					// targetConfigARM64.cpu = 'arm64';
-					// targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
-					// targetConfigs.push(targetConfigARM64);
+					final targetConfigARM64:Config = getDefaultTargetPlatform();
+					targetConfigARM64.os = 'win';
+					targetConfigARM64.cpu = 'arm64';
+					targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
+					targetConfigs.push(targetConfigARM64);
 
-					// final targetConfigX86:Config = getDefaultTargetPlatform();
-					// targetConfigX86.os = 'win';
-					// targetConfigX86.cpu = 'x86';
-					// targetConfigX86.args = targetConfigX86.args.concat(renderingBackends);
-					// targetConfigs.push(targetConfigX86);
+					final targetConfigX86:Config = getDefaultTargetPlatform();
+					targetConfigX86.os = 'win';
+					targetConfigX86.cpu = 'x86';
+					targetConfigX86.args = targetConfigX86.args.concat(renderingBackends);
+					targetConfigs.push(targetConfigX86);
 			}
 		}
 
