@@ -95,7 +95,6 @@ class Build
 										}
 									}
 								}
-
 							}
 					}
 				}
@@ -172,6 +171,7 @@ class Build
 		targetConfig.args.push('is_clang=true');
 		targetConfig.args.push('clang_use_chrome_plugins=false');
 		targetConfig.args.push('use_custom_libcxx=false');
+		targetConfig.args.push('_use_copy_compiler_dll=false');
 	}
 
 	public static function addAngleSetup(targetConfig:Config):Void

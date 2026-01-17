@@ -7,6 +7,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
 
+      - name: Install Visual Studio Components
+        uses: microsoft/setup-msbuild@main
+
       - name: Setup Haxe
         uses: krdlab/setup-haxe@master
         with:
