@@ -2,6 +2,9 @@ name: Build-Angle
 on:
   push:
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   Windows:
     runs-on: windows-2022
