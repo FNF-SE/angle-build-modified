@@ -87,21 +87,19 @@ class Build
 		{
 			for (file in FileSystem.readDirectory('angle/${buildConfig.getExportPath()}'))
 			{
-				trace(Path.join(['angle/${buildConfig.getExportPath()}', file]));
-
 				switch (buildPlatform)
 				{
 					case 'windows':
 						if (Path.extension(file) == 'lib')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/lib/${buildConfig.cpu}/$file');
+							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
 						else if (Path.extension(file) == 'dll')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/bin/${buildConfig.cpu}/$file');
+							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/bin/${buildConfig.cpu}/$file');
 					case 'linux':
 						if (Path.extension(file) == 'so')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/lib/${buildConfig.cpu}/$file');
+							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
 					case 'macos':
 						if (Path.extension(file) == 'dylib')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/lib/${buildConfig.cpu}/$file');
+							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
 				}
 			}
 		}
