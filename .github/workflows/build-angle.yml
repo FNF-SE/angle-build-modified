@@ -69,3 +69,23 @@ jobs:
           name: angle-linux-libs
           path: export/build/linux
           if-no-files-found: warn
+  iOS:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: 4.3.7
+
+      - name: Build Angle
+        run: haxe build.hxml --define buildPlatform=ios
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: angle-ios-libs
+          path: export/build/ios
+          if-no-files-found: warn

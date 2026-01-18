@@ -108,6 +108,8 @@ class Build
 						Sys.command('install_name_tool', ['-id', '@rpath/$lib.dylib', libDestination]);
 
 						libsToCombine.get(lib).push(libDestination);
+					case 'ios':
+						FileUtil.copyDirectory('angle/${buildConfig.getExportPath()}/$lib.framework', 'build/$buildPlatform/lib/${buildConfig.environment}/${buildConfig.cpu}/$lib.framework');
 				}
 			}
 		}
@@ -187,7 +189,7 @@ class Build
 						targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
 						targetConfigs.push(targetConfigARM64);
 					}
-				case 'macos':
+				case 'macos' | 'ios':
 					final renderingBackends:Array<String> = [];
 
 					renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
@@ -199,17 +201,43 @@ class Build
 					renderingBackends.push('angle_enable_vulkan=false'); // Disable Vulkan backend
 					renderingBackends.push('angle_enable_swiftshader=false'); // Disable SwiftShader
 
-					final targetConfigARM64:Config = getDefaultTargetPlatform();
-					targetConfigARM64.os = 'mac';
-					targetConfigARM64.cpu = 'arm64';
-					targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
-					targetConfigs.push(targetConfigARM64);
+					if (buildPlatform == 'macos')
+					{
+						final targetConfigARM64:Config = getDefaultTargetPlatform();
+						targetConfigARM64.os = 'mac';
+						targetConfigARM64.cpu = 'arm64';
+						targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
+						targetConfigs.push(targetConfigARM64);
 
-					final targetConfigX64:Config = getDefaultTargetPlatform();
-					targetConfigX64.os = 'mac';
-					targetConfigX64.cpu = 'x64';
-					targetConfigX64.args = targetConfigX64.args.concat(renderingBackends);
-					targetConfigs.push(targetConfigX64);
+						final targetConfigX64:Config = getDefaultTargetPlatform();
+						targetConfigX64.os = 'mac';
+						targetConfigX64.cpu = 'x64';
+						targetConfigX64.args = targetConfigX64.args.concat(renderingBackends);
+						targetConfigs.push(targetConfigX64);
+					}
+					else
+					{
+						final targetConfigDeviceARM64:Config = getDefaultTargetPlatform();
+						targetConfigDeviceARM64.os = 'ios';
+						targetConfigDeviceARM64.cpu = 'arm64';
+						targetConfigDeviceARM64.environment = 'device';
+						targetConfigDeviceARM64.args = targetConfigDeviceARM64.args.concat(renderingBackends);
+						targetConfigs.push(targetConfigDeviceARM64);
+
+						final targetConfigSimulatorARM64:Config = getDefaultTargetPlatform();
+						targetConfigSimulatorARM64.os = 'ios';
+						targetConfigSimulatorARM64.cpu = 'arm64';
+						targetConfigSimulatorARM64.environment = 'simulator';
+						targetConfigSimulatorARM64.args = targetConfigDeviceARM64.args.concat(renderingBackends);
+						targetConfigs.push(targetConfigDeviceARM64);
+
+						final targetConfigSimulatorX64:Config = getDefaultTargetPlatform();
+						targetConfigSimulatorX64.os = 'ios';
+						targetConfigSimulatorX64.cpu = 'x64';
+						targetConfigSimulatorX64.environment = 'simulator';
+						targetConfigSimulatorX64.args = targetConfigSimulatorX64.args.concat(renderingBackends);
+						targetConfigs.push(targetConfigSimulatorX64);
+					}
 			}
 		}
 
@@ -236,6 +264,9 @@ class Build
 		targetConfig.args.push('is_clang=true');
 		targetConfig.args.push('clang_use_chrome_plugins=false');
 		targetConfig.args.push('use_custom_libcxx=false');
+
+		if (buildPlatform == 'ios')
+			targetConfig.args.push('ios_enable_code_signing=false');
 	}
 
 	public static function addAngleSetup(targetConfig:Config):Void
