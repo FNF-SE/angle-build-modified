@@ -19,7 +19,7 @@ class Build
 	static final ANGLE_LIBS:Array<String> = ['libGLESv2', 'libEGL'];
 
 	@:noCompletion
-	static var buildPlatform:Null<String>;
+	static var buildPlatform:String = '';
 
 	@:noCompletion
 	static var buildConfigs:Array<Config>;
@@ -62,7 +62,7 @@ class Build
 				File.saveContent(Path.join([targetConfig.getExportPath(), 'args.gn']), targetConfig.getAngleArgs().split(' ').join('\n'));
 
 				if (buildPlatform == 'linux' && targetConfig.cpu == 'arm64')
-					Sys.command('python', ['build/linux/sysroot_scripts/install-sysroot.py', '--arch=arm64']);
+					Sys.command('python3', ['build/linux/sysroot_scripts/install-sysroot.py', '--arch=arm64']);
 
 				if (Sys.command('gn', ['gen', targetConfig.getExportPath()]) != 0)
 				{
@@ -82,25 +82,48 @@ class Build
 		for (headersFolder in ANGLE_HEADERS_FOLDERS)
 			FileUtil.copyDirectory('angle/include/$headersFolder', 'build/$buildPlatform/include/$headersFolder');
 
+		// The libs that will be made an universal version of.
+		final libsToCombine:Map<String, Array<String>> = [];
+
 		// Copy angle's libs.
 		for (buildConfig in buildConfigs)
 		{
-			for (file in FileSystem.readDirectory('angle/${buildConfig.getExportPath()}'))
+			for (lib in ANGLE_LIBS)
 			{
 				switch (buildPlatform)
 				{
 					case 'windows':
-						if (Path.extension(file) == 'lib')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
-						else if (Path.extension(file) == 'dll')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/bin/${buildConfig.cpu}/$file');
+						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.dll.lib', 'build/$buildPlatform/lib/${buildConfig.cpu}/$lib.dll.lib');
+						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.dll', 'build/$buildPlatform/bin/${buildConfig.cpu}/$lib.dll');
 					case 'linux':
-						if (Path.extension(file) == 'so')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
+						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.so', 'build/$buildPlatform/lib/${buildConfig.cpu}/$lib.so');
 					case 'macos':
-						if (Path.extension(file) == 'dylib')
-							FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$file', 'build/$buildPlatform/lib/${buildConfig.cpu}/$file');
+						if (!libsToCombine.exists(lib))
+							libsToCombine.set(lib, new Array<String>());
+
+						final libDestination:String = 'build/$buildPlatform/lib/${buildConfig.cpu}/$lib.dylib';
+
+						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.dylib', libDestination);
+
+						Sys.command('install_name_tool', ['-id', '@rpath/$lib.dylib', libDestination]);
+
+						libsToCombine.get(lib).push(libDestination);
 				}
+			}
+		}
+
+		if (buildPlatform == 'macos')
+		{
+			for (key => value in libsToCombine)
+			{
+				final universalLibDestination:String = 'build/$buildPlatform/lib/universal/$key.dylib';
+
+				FileUtil.createDirectory(Path.directory(universalLibDestination));
+
+				if (Sys.command('lipo', ['-create', '-output', universalLibDestination].concat(value)) == 0)
+					Sys.command('install_name_tool', ['-id', '@rpath/$key.dylib', universalLibDestination]);
+				else
+					Sys.println(ANSIUtil.apply('Failed to create universal lib for "$key".', [ANSICode.Bold, ANSICode.Yellow]));
 			}
 		}
 	}
