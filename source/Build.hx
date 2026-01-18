@@ -36,6 +36,9 @@ class Build
 		FileUtil.createDirectory('build');
 
 		// Start the building proccess.
+		Sys.println(ANSIUtil.apply('Angle build started...', [ANSICode.Bold, ANSICode.Blue]));
+
+		// Go and back from the angle directory.
 		FileUtil.goAndBackFromDir('angle', function():Void
 		{
 			if (Sys.systemName() == 'Linux')
@@ -109,7 +112,14 @@ class Build
 
 						libsToCombine.get(lib).push(libDestination);
 					case 'ios':
-						FileUtil.copyDirectory('angle/${buildConfig.getExportPath()}/$lib.framework', 'build/$buildPlatform/lib/${buildConfig.environment}/${buildConfig.cpu}/$lib.framework');
+						if (!libsToCombine.exists(lib))
+							libsToCombine.set(lib, new Array<String>());
+
+						final libDestination:String = 'build/$buildPlatform/lib/${buildConfig.environment}/${buildConfig.cpu}/$lib.framework';
+
+						FileUtil.copyDirectory('angle/${buildConfig.getExportPath()}/$lib.framework', libDestination);
+
+						libsToCombine.get(lib).push(libDestination);
 				}
 			}
 		}
@@ -128,6 +138,28 @@ class Build
 					Sys.println(ANSIUtil.apply('Failed to create universal lib for "$key".', [ANSICode.Bold, ANSICode.Yellow]));
 			}
 		}
+		else if (buildPlatform == 'ios')
+		{
+			for (key => value in libsToCombine)
+			{
+				final universalFrameworkDestination:String = 'build/$buildPlatform/lib/universal/$key.xcframework';
+
+				FileUtil.createDirectory(Path.directory(universalFrameworkDestination));
+
+				final frameworksToMerge:Array<String> = [];
+
+				for (framework in value)
+				{
+					frameworksToMerge.push('-framework');
+					frameworksToMerge.push(framework);
+				}
+
+				Sys.command('xcodebuild', ['-create-xcframework'].concat(frameworksToMerge).concat(['-output', universalFrameworkDestination]));
+			}
+		}
+
+		// The building proccess finished.
+		Sys.println(ANSIUtil.apply('Angle build complete!', [ANSICode.Bold, ANSICode.Green]));
 	}
 
 	public static function getBuildConfig():Array<Config>
