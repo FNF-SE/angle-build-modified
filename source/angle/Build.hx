@@ -160,9 +160,9 @@ class Build
 				{
 					if (libEnviromentLibs.length >= 2)
 					{
-						final universalLibDestination:String = 'build/$buildPlatform/lib/$libEnviromentName/universal/$libName.framework/$libName';
+						final universalLibDestination:String = 'build/$buildPlatform/lib/$libEnviromentName/universal/$libName.framework';
 
-						FileUtil.createDirectory(Path.directory(universalLibDestination));
+						FileUtil.createDirectory(Path.directory(Path.addTrailingSlash(universalLibDestination)));
 
 						{
 							final frameworksToMerge:Array<String> = [];
@@ -170,9 +170,7 @@ class Build
 							for (framework in libEnviromentLibs)
 								frameworksToMerge.push('$framework/$libName');
 
-							if (Sys.command('lipo', ['-create', '-output', universalLibDestination].concat(frameworksToMerge)) == 0)
-								Sys.command('install_name_tool', ['-id', '@rpath/$libName.dylib', universalLibDestination]);
-							else
+							if (Sys.command('lipo', ['-create', '-output', '$universalLibDestination/$libName'].concat(frameworksToMerge)) != 0)
 								Sys.println(ANSIUtil.apply('Failed to create universal lib for "$libName".', [ANSICode.Bold, ANSICode.Yellow]));
 						}
 
