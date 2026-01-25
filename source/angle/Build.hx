@@ -106,6 +106,8 @@ class Build
 						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.dll', 'build/$buildPlatform/bin/${buildConfig.cpu}/$lib.dll');
 					case 'linux':
 						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.so', 'build/$buildPlatform/lib/${buildConfig.cpu}/$lib.so');
+					case 'android':
+						FileUtil.copyFile('angle/${buildConfig.getExportPath()}/$lib.so', 'build/$buildPlatform/lib/${buildConfig.cpu}/$lib.so');
 					case 'macos':
 						if (!macosLibsToCombine.exists(lib))
 							macosLibsToCombine.set(lib, new Array<String>());
@@ -217,7 +219,7 @@ class Build
 		{
 			switch (buildPlatform)
 			{
-				case 'windows' | 'linux':
+				case 'windows' | 'linux' | 'android':
 					final renderingBackends:Array<String> = [];
 
 					renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
@@ -253,7 +255,7 @@ class Build
 						targetConfigX86.args = targetConfigX86.args.concat(renderingBackends);
 						targetConfigs.push(targetConfigX86);
 					}
-					else
+					else if (buildPlatform == 'linux')
 					{
 						final targetConfigX86:Config = getDefaultTargetPlatform();
 						targetConfigX86.os = 'linux';
@@ -279,6 +281,32 @@ class Build
 						targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
 						targetConfigs.push(targetConfigARM64);
 					}
+					else if (buildPlatform == 'android')
+	                {
+	                    final targetConfigARM:Config = getDefaultTargetPlatform();
+	                    targetConfigARM.os = 'android';
+	                    targetConfigARM.cpu = 'arm';
+	                    targetConfigARM.args = targetConfigARM.args.concat(renderingBackends);
+	                    targetConfigs.push(targetConfigARM);
+
+	                    final targetConfigARM64:Config = getDefaultTargetPlatform();
+	                    targetConfigARM64.os = 'android';
+	                    targetConfigARM64.cpu = 'arm64';
+	                    targetConfigARM64.args = targetConfigARM64.args.concat(renderingBackends);
+	                    targetConfigs.push(targetConfigARM64);
+
+	                    final targetConfigX86:Config = getDefaultTargetPlatform();
+	                    targetConfigX86.os = 'android';
+	                    targetConfigX86.cpu = 'x86';
+	                    targetConfigX86.args = targetConfigX86.args.concat(renderingBackends);
+	                    targetConfigs.push(targetConfigX86);
+
+	                    final targetConfigX64:Config = getDefaultTargetPlatform();
+	                    targetConfigX64.os = 'android';
+	                    targetConfigX64.cpu = 'x64';
+	                    targetConfigX64.args = targetConfigX64.args.concat(renderingBackends);
+	                    targetConfigs.push(targetConfigX64);
+	                }
 				case 'macos' | 'ios':
 					final renderingBackends:Array<String> = [];
 
