@@ -222,17 +222,9 @@ class Build
 				case 'windows' | 'linux' | 'android':
 					final renderingBackends:Array<String> = [];
 
-					if (buildPlatform == 'windows')
-					{
-						renderingBackends.push('angle_enable_d3d9=true'); // Enable D3D9 backend
-						renderingBackends.push('angle_enable_d3d11=true'); // Enable D3D11 backend
-					}
-					else
-					{
-						renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
-						renderingBackends.push('angle_enable_d3d11=false'); // Disable D3D11 backend
-					}
-					renderingBackends.push('angle_enable_gl=false'); // Disable OpenGL backend
+					renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
+					renderingBackends.push('angle_enable_d3d11=false'); // Disable D3D11 backend
+					renderingBackends.push('angle_enable_gl=true'); // Enable OpenGL backend
 					renderingBackends.push('angle_enable_metal=false'); // Disable Metal backend
 					renderingBackends.push('angle_enable_null=false'); // Disable Null backend
 					renderingBackends.push('angle_enable_wgpu=false'); // Disable WebGPU backend
