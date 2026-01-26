@@ -445,8 +445,8 @@ class Build
 			    Sys.exit(1);
 			}
 
-			targetConfig.args.push('android_sdk_root=$androidSdk');
-			targetConfig.args.push('android_ndk_root=$androidNdk');
+			targetConfig.args.push('android_sdk_root="$androidSdk"');
+			targetConfig.args.push('android_ndk_root="$androidNdk"');
 		}
 	}
 
