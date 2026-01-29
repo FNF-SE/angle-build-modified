@@ -231,7 +231,6 @@ class Build
 				case 'windows' | 'linux' | 'android':
 					final renderingBackends:Array<String> = [];
 
-					renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
 					/*if (buildPlatform != 'windows')
 					{*/
 						renderingBackends.push('angle_enable_gl=true'); // Enable OpenGL backend
@@ -247,10 +246,12 @@ class Build
 
 					if (buildPlatform == 'windows')
 					{
+						renderingBackends.push('angle_enable_d3d9=true'); // Enable D3D9 backend
 						renderingBackends.push('angle_enable_d3d11=true'); // Enable D3D11 backend
 					}
 					else
 					{
+						renderingBackends.push('angle_enable_d3d9=false'); // Disable D3D9 backend
 						renderingBackends.push('angle_enable_d3d11=false'); // Disable D3D11 backend
 					}
 

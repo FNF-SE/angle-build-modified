@@ -27,6 +27,37 @@ class FileUtil
 	}
 
 	/**
+	 * Applies all git patches in a directory.
+	 * Patches are checked before applying and processed in sorted order.
+	 * 
+	 * @param dir The directory to `.patch` files.
+	 */
+	public static function applyGitPatchesFromDir(dir:String):Void
+	{
+		final patchDir = Path.normalize(dir);
+
+		if (!FileSystem.exists(patchDir))
+			return;
+
+		var patches = FileSystem.readDirectory(patchDir);
+		patches.sort(Reflect.compare);
+
+		for (patch in patches)
+		{
+			if (Path.extension(patch) != 'patch')
+				continue;
+
+			final patchPath = Path.join([patchDir, patch]);
+
+			var check = Sys.command('git', ['apply', '--check', patchPath]);
+			if (check == 0)
+				Sys.command('git', ['apply', patchPath]);
+			else
+				Sys.println(ANSIUtil.apply('Patching failed for "$patch", continuing without being applied...', [ANSICode.Bold, ANSICode.Yellow]));
+		}
+	}
+
+	/**
 	 * Changes the working directory to the specified path.
 	 * 
 	 * @param dir The directory path to change to (absolute or relative).
