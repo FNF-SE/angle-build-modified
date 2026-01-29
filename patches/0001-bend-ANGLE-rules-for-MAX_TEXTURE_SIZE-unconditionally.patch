@@ -1,21 +1,21 @@
-From 8f1c220ec59bab7b9b4aa85ae1e6252f25e6f73b Mon Sep 17 00:00:00 2001
+From 172ecebcedb70e034bb6478112e1839d93d9ec06 Mon Sep 17 00:00:00 2001
 From: Homura <egzozu.be.bas@gmail.com>
-Date: Thu, 29 Jan 2026 13:07:15 +0300
+Date: Thu, 29 Jan 2026 23:27:44 +0300
 Subject: [PATCH] bend ANGLE rules for `MAX_TEXTURE_SIZE` unconditionally.
 
 Currently, reaching `MAX_TEXTURE_SIZE` has the effect of a black box. The creation fails and the behavior diverges vastly across backends, Without having the ability to realistically probe what the GPU can do, applications end up losing that capability.
 
 Instead of making guesses, we give the GPU permission to try to create the texture and rely on backend validation and driver behavior that may either accept or reject the operation. It is not a good solution, but this method is a more transparent, consistent, and quite naturally aligned with hardware limits of the present, day than overly conservative clamping.
 ---
- src/libANGLE/Context.cpp                      | 16 ++++++------
- .../renderer/d3d/d3d11/renderer11_utils.cpp   |  2 +-
+ src/libANGLE/Context.cpp                      | 16 +++++------
+ .../renderer/d3d/d3d11/renderer11_utils.cpp   | 28 +------------------
  .../renderer/d3d/d3d9/renderer9_utils.cpp     |  2 +-
- src/libANGLE/renderer/gl/renderergl_utils.cpp | 14 +++++------
+ src/libANGLE/renderer/gl/renderergl_utils.cpp | 14 +++++-----
  src/libANGLE/renderer/metal/DisplayMtl.mm     |  4 +--
  src/libANGLE/renderer/vulkan/CLDeviceVk.cpp   |  4 +--
- .../renderer/vulkan/vk_caps_utils.cpp         | 25 +++++++------------
- src/libANGLE/renderer/wgpu/wgpu_utils.cpp     | 14 +++++------
- 8 files changed, 37 insertions(+), 44 deletions(-)
+ .../renderer/vulkan/vk_caps_utils.cpp         | 25 ++++++-----------
+ src/libANGLE/renderer/wgpu/wgpu_utils.cpp     | 14 +++++-----
+ 8 files changed, 37 insertions(+), 70 deletions(-)
 
 diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
 index a120b4d..6d2144d 100644
@@ -59,10 +59,43 @@ index a120b4d..6d2144d 100644
      ANGLE_LIMIT_CAP(caps->maxShaderUniformBlocks[ShaderType::Vertex],
                      IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS);
 diff --git a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
-index 6cc6949..bf042bd 100644
+index 6cc6949..e4ba9cc 100644
 --- a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
-@@ -1388,7 +1388,7 @@ void GenerateCaps(ID3D11Device *device,
+@@ -414,32 +414,6 @@ int GetMaximumSimultaneousRenderTargets(D3D_FEATURE_LEVEL featureLevel)
+     }
+ }
+ 
+-int GetMaximum2DTextureSize(D3D_FEATURE_LEVEL featureLevel)
+-{
+-    switch (featureLevel)
+-    {
+-        case D3D_FEATURE_LEVEL_12_1:
+-        case D3D_FEATURE_LEVEL_12_0:
+-        case D3D_FEATURE_LEVEL_11_1:
+-        case D3D_FEATURE_LEVEL_11_0:
+-            return D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+-
+-        case D3D_FEATURE_LEVEL_10_1:
+-        case D3D_FEATURE_LEVEL_10_0:
+-            return D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+-
+-        case D3D_FEATURE_LEVEL_9_3:
+-            return D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+-        case D3D_FEATURE_LEVEL_9_2:
+-        case D3D_FEATURE_LEVEL_9_1:
+-            return D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+-
+-        default:
+-            UNREACHABLE();
+-            return 0;
+-    }
+-}
+-
+ int GetMaximumCubeMapTextureSize(D3D_FEATURE_LEVEL featureLevel)
+ {
+     switch (featureLevel)
+@@ -1388,7 +1362,7 @@ void GenerateCaps(ID3D11Device *device,
      // Reserve MAX_UINT for D3D11's primitive restart.
      caps->maxElementIndex  = static_cast<GLint64>(std::numeric_limits<unsigned int>::max() - 1);
      caps->max3DTextureSize = GetMaximum3DTextureSize(featureLevel);
@@ -271,5 +304,5 @@ index 355ea94..f220d19 100644
      glCaps->maxColorTextureSamples = kMaxSampleCount;
      glCaps->maxDepthTextureSamples = kMaxSampleCount;
 -- 
-2.47.3
+2.52.0
 
