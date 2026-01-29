@@ -1,6 +1,6 @@
-From e3ed2f0029fce701919809369392c0d70cf5e210 Mon Sep 17 00:00:00 2001
+From 619dd4d6ce01bf64eec68bdb9601d5bf4310d045 Mon Sep 17 00:00:00 2001
 From: Homura <egzozu.be.bas@gmail.com>
-Date: Wed, 28 Jan 2026 19:48:11 +0300
+Date: Thu, 29 Jan 2026 11:04:57 +0300
 Subject: [PATCH] bend ANGLE rules for `MAX_TEXTURE_SIZE` unconditionally.
 
 Currently, reaching `MAX_TEXTURE_SIZE` has the effect of a black box. The creation fails and the behavior diverges vastly across backends, Without having the ability to realistically probe what the GPU can do, applications end up losing that capability.
@@ -15,17 +15,17 @@ Instead of making guesses, we give the GPU permission to try to create the textu
  .../renderer/d3d/d3d9/renderer9_utils.cpp     |  8 +-
  src/libANGLE/renderer/vulkan/CLDeviceVk.cpp   |  4 +-
  .../renderer/vulkan/vk_caps_utils.cpp         | 16 +---
- src/libANGLE/renderer/wgpu/wgpu_utils.cpp     |  2 +-
+ src/libANGLE/renderer/wgpu/wgpu_utils.cpp     | 12 +--
  src/libANGLE/validationEGL.cpp                |  4 +-
  src/libANGLE/validationES.cpp                 | 40 +-------
  src/libANGLE/validationES1.cpp                |  5 -
  src/libANGLE/validationES2.cpp                | 47 ----------
  src/libANGLE/validationES3.cpp                | 94 +------------------
  src/libANGLE/validationESEXT.cpp              | 11 +--
- 15 files changed, 40 insertions(+), 235 deletions(-)
+ 15 files changed, 45 insertions(+), 240 deletions(-)
 
 diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
-index a120b4d..135dd85 100644
+index a120b4d..3909a73 100644
 --- a/src/libANGLE/Context.cpp
 +++ b/src/libANGLE/Context.cpp
 @@ -2017,10 +2017,10 @@ void Context::getIntegervImpl(GLenum pname, GLint *params) const
@@ -100,7 +100,7 @@ index 15f336c..fccba43 100644
  inline constexpr const char *kTilingEndCalledWithoutStart = "EndTiling called without corresponding StartTiling.";
  inline constexpr const char *kTilingStartCalledWithoutEnd = "StartTiling called without corresponding EndTiling.";
 diff --git a/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp b/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
-index b074753..1ff639b 100644
+index b074753..cd74713 100644
 --- a/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
 @@ -1366,10 +1366,10 @@ egl::ConfigSet Renderer11::generateConfigs()
@@ -118,7 +118,7 @@ index b074753..1ff639b 100644
                  config.minSwapInterval  = 0;
                  config.nativeRenderable = EGL_FALSE;
 diff --git a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
-index 6cc6949..2549ad0 100644
+index 6cc6949..9212a8d 100644
 --- a/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
 @@ -1388,7 +1388,7 @@ void GenerateCaps(ID3D11Device *device,
@@ -140,7 +140,7 @@ index 6cc6949..2549ad0 100644
      // Maximum draw buffers and color attachments are the same, max color attachments could
      // eventually be increased to 16
 diff --git a/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp b/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
-index c81d071..993808b 100644
+index c81d071..dc55dc1 100644
 --- a/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
 @@ -554,10 +554,10 @@ egl::ConfigSet Renderer9::generateConfigs()
@@ -158,7 +158,7 @@ index c81d071..993808b 100644
                      config.minSwapInterval  = minSwapInterval;
                      config.nativeRenderable = EGL_FALSE;
 diff --git a/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp b/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp
-index 52e9cda..0c9e049 100644
+index 52e9cda..4458f84 100644
 --- a/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp
 +++ b/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp
 @@ -534,10 +534,10 @@ void GenerateCaps(IDirect3D9 *d3d9,
@@ -192,7 +192,7 @@ index 52e9cda..0c9e049 100644
  
      // Point size is clamped to 1.0f when the shader model is less than 3
 diff --git a/src/libANGLE/renderer/vulkan/CLDeviceVk.cpp b/src/libANGLE/renderer/vulkan/CLDeviceVk.cpp
-index b395697..a23272d 100644
+index b395697..37f1953 100644
 --- a/src/libANGLE/renderer/vulkan/CLDeviceVk.cpp
 +++ b/src/libANGLE/renderer/vulkan/CLDeviceVk.cpp
 @@ -177,8 +177,8 @@ CLDeviceImpl::Info CLDeviceVk::createInfo(cl::DeviceType type) const
@@ -207,7 +207,7 @@ index b395697..a23272d 100644
      info.image3D_MaxHeight = properties.limits.maxImageDimension3D;
      info.image3D_MaxDepth  = properties.limits.maxImageDimension3D;
 diff --git a/src/libANGLE/renderer/vulkan/vk_caps_utils.cpp b/src/libANGLE/renderer/vulkan/vk_caps_utils.cpp
-index 4102464..1254db6 100644
+index 4102464..e4900f7 100644
 --- a/src/libANGLE/renderer/vulkan/vk_caps_utils.cpp
 +++ b/src/libANGLE/renderer/vulkan/vk_caps_utils.cpp
 @@ -658,13 +658,12 @@ void Renderer::ensureCapsInitialized() const
@@ -252,10 +252,10 @@ index 4102464..1254db6 100644
      config.maxSwapInterval    = 1;
      config.minSwapInterval    = 0;
 diff --git a/src/libANGLE/renderer/wgpu/wgpu_utils.cpp b/src/libANGLE/renderer/wgpu/wgpu_utils.cpp
-index 355ea94..a86293d 100644
+index 355ea94..5d8e067 100644
 --- a/src/libANGLE/renderer/wgpu/wgpu_utils.cpp
 +++ b/src/libANGLE/renderer/wgpu/wgpu_utils.cpp
-@@ -265,7 +265,7 @@ void GenerateCaps(const WGPULimits &limitsWgpu,
+@@ -265,11 +265,11 @@ void GenerateCaps(const WGPULimits &limitsWgpu,
      // OpenGL ES caps
      glCaps->maxElementIndex       = std::numeric_limits<GLuint>::max() - 1;
      glCaps->max3DTextureSize      = rx::LimitToInt(limitsWgpu.maxTextureDimension3D);
@@ -263,9 +263,30 @@ index 355ea94..a86293d 100644
 +    glCaps->max2DTextureSize      = 16384;
      glCaps->maxArrayTextureLayers = rx::LimitToInt(limitsWgpu.maxTextureArrayLayers);
      glCaps->maxLODBias            = 0.0f;
-     glCaps->maxCubeMapTextureSize = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
+-    glCaps->maxCubeMapTextureSize = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
+-    glCaps->maxRenderbufferSize   = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
++    glCaps->maxCubeMapTextureSize = 16384;
++    glCaps->maxRenderbufferSize   = 16384;
+     glCaps->minAliasedPointSize   = 1.0f;
+     glCaps->maxAliasedPointSize   = 1.0f;
+     glCaps->minAliasedLineWidth   = 1.0f;
+@@ -279,11 +279,11 @@ void GenerateCaps(const WGPULimits &limitsWgpu,
+     constexpr uint32_t kMaxSampleCount = 4;
+ 
+     glCaps->maxDrawBuffers         = rx::LimitToInt(limitsWgpu.maxColorAttachments);
+-    glCaps->maxFramebufferWidth    = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
+-    glCaps->maxFramebufferHeight   = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
++    glCaps->maxFramebufferWidth    = 16384;
++    glCaps->maxFramebufferHeight   = 16384;
+     glCaps->maxFramebufferSamples  = kMaxSampleCount;
+     glCaps->maxColorAttachments    = rx::LimitToInt(limitsWgpu.maxColorAttachments);
+-    glCaps->maxViewportWidth       = rx::LimitToInt(limitsWgpu.maxTextureDimension2D);
++    glCaps->maxViewportWidth       = 16384;
+     glCaps->maxViewportHeight      = glCaps->maxViewportWidth;
+     glCaps->maxSampleMaskWords     = 1;
+     glCaps->maxColorTextureSamples = kMaxSampleCount;
 diff --git a/src/libANGLE/validationEGL.cpp b/src/libANGLE/validationEGL.cpp
-index b62b559..179052c 100644
+index b62b559..942eb86 100644
 --- a/src/libANGLE/validationEGL.cpp
 +++ b/src/libANGLE/validationEGL.cpp
 @@ -42,10 +42,10 @@ size_t GetMaximumMipLevel(const gl::Context *context, gl::TextureType type)
@@ -282,7 +303,7 @@ index b62b559..179052c 100644
          case gl::TextureType::CubeMap:
              maxDimension = caps.maxCubeMapTextureSize;
 diff --git a/src/libANGLE/validationES.cpp b/src/libANGLE/validationES.cpp
-index 1f3b77e..3e4de68 100644
+index 1f3b77e..4b10b16 100644
 --- a/src/libANGLE/validationES.cpp
 +++ b/src/libANGLE/validationES.cpp
 @@ -1140,18 +1140,12 @@ bool ValidFramebufferTarget(const Context *context, GLenum target)
