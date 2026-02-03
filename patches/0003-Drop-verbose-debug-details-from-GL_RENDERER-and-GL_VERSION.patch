@@ -1,20 +1,23 @@
-From 5fee5e3e3dcfa5808f2c6c6c6009380aba281bd8 Mon Sep 17 00:00:00 2001
+From 76d151b7f1cfaaef3a1fa74913ff1bf501e3bb72 Mon Sep 17 00:00:00 2001
 From: Homura <egzozu.be.bas@gmail.com>
-Date: Sat, 31 Jan 2026 14:17:32 +0300
+Date: Tue, 3 Feb 2026 16:42:03 +0300
 Subject: [PATCH 3/3] Drop verbose debug details from `GL_RENDERER` and
  `GL_VERSION`.
 
 ---
  src/libANGLE/Context.cpp                      | 16 ++------------
+ src/libANGLE/renderer/cl/CLPlatformCL.cpp     |  2 +-
  .../renderer/d3d/d3d11/Renderer11.cpp         |  9 --------
  src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp  | 13 ------------
  src/libANGLE/renderer/gl/DisplayGL.cpp        | 10 +++++----
  src/libANGLE/renderer/metal/DisplayMtl.mm     |  5 +++--
+ src/libANGLE/renderer/vulkan/CLPlatformVk.cpp |  3 +--
  src/libANGLE/renderer/vulkan/vk_renderer.cpp  | 21 -------------------
- 6 files changed, 11 insertions(+), 63 deletions(-)
+ src/libGLESv2/egl_stubs.cpp                   |  2 +-
+ 9 files changed, 14 insertions(+), 67 deletions(-)
 
 diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
-index 6d2144d..5a9d0d1 100644
+index a120b4d..0b77f81 100644
 --- a/src/libANGLE/Context.cpp
 +++ b/src/libANGLE/Context.cpp
 @@ -3537,23 +3537,13 @@ void Context::initRendererString()
@@ -61,6 +64,19 @@ index 6d2144d..5a9d0d1 100644
      mShadingLanguageString = MakeStaticString(shadingLanguageVersionString.str());
  }
  
+diff --git a/src/libANGLE/renderer/cl/CLPlatformCL.cpp b/src/libANGLE/renderer/cl/CLPlatformCL.cpp
+index 9e73a8a..6178f4a 100644
+--- a/src/libANGLE/renderer/cl/CLPlatformCL.cpp
++++ b/src/libANGLE/renderer/cl/CLPlatformCL.cpp
+@@ -170,7 +170,7 @@ CLPlatformImpl::Info CLPlatformCL::createInfo() const
+     }
+ 
+     // Customize version string and name
+-    info.versionStr += std::string(" (ANGLE ") + angle::GetANGLEVersionString() + ")";
++    info.versionStr += std::string(" (ANGLE)");
+     info.name.insert(0u, "ANGLE pass-through -> ");
+ 
+     if (version >= CL_MAKE_VERSION(2, 1, 0) &&
 diff --git a/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp b/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
 index b074753..c38155c 100644
 --- a/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
@@ -130,7 +146,7 @@ index e8aa88e..e330228 100644
  }
  
 diff --git a/src/libANGLE/renderer/metal/DisplayMtl.mm b/src/libANGLE/renderer/metal/DisplayMtl.mm
-index 02989ef..bd3e8cb 100644
+index 4132c42..632db3b 100644
 --- a/src/libANGLE/renderer/metal/DisplayMtl.mm
 +++ b/src/libANGLE/renderer/metal/DisplayMtl.mm
 @@ -192,12 +192,13 @@ std::string DisplayMtl::getRendererDescription()
@@ -149,11 +165,25 @@ index 02989ef..bd3e8cb 100644
          }
  
          return desc;
+diff --git a/src/libANGLE/renderer/vulkan/CLPlatformVk.cpp b/src/libANGLE/renderer/vulkan/CLPlatformVk.cpp
+index bfe30e8..db801fc 100644
+--- a/src/libANGLE/renderer/vulkan/CLPlatformVk.cpp
++++ b/src/libANGLE/renderer/vulkan/CLPlatformVk.cpp
+@@ -216,8 +216,7 @@ const std::string &CLPlatformVk::GetVersionString()
+ {
+     static const angle::base::NoDestructor<const std::string> sVersion(
+         "OpenCL " + std::to_string(CL_VERSION_MAJOR(GetVersion())) + "." +
+-        std::to_string(CL_VERSION_MINOR(GetVersion())) + " ANGLE " +
+-        angle::GetANGLEVersionString());
++        std::to_string(CL_VERSION_MINOR(GetVersion())) + " (ANGLE)");
+     return *sVersion;
+ }
+ 
 diff --git a/src/libANGLE/renderer/vulkan/vk_renderer.cpp b/src/libANGLE/renderer/vulkan/vk_renderer.cpp
-index 829c21b..4ce9de9 100644
+index 893982c..87abbaa 100644
 --- a/src/libANGLE/renderer/vulkan/vk_renderer.cpp
 +++ b/src/libANGLE/renderer/vulkan/vk_renderer.cpp
-@@ -4920,28 +4920,7 @@ std::string Renderer::getRendererDescription() const
+@@ -4926,28 +4926,7 @@ std::string Renderer::getRendererDescription() const
  {
      std::stringstream strstr;
  
@@ -182,6 +212,19 @@ index 829c21b..4ce9de9 100644
  
      return strstr.str();
  }
+diff --git a/src/libGLESv2/egl_stubs.cpp b/src/libGLESv2/egl_stubs.cpp
+index 8edb333..69bd150 100644
+--- a/src/libGLESv2/egl_stubs.cpp
++++ b/src/libGLESv2/egl_stubs.cpp
+@@ -600,7 +600,7 @@ const char *QueryString(Thread *thread, Display *display, EGLint name)
+         case EGL_VERSION:
+         {
+             static const char *sVersionString =
+-                MakeStaticString(std::string("1.5 (ANGLE ") + angle::GetANGLEVersionString() + ")");
++                MakeStaticString(std::string("1.5 (ANGLE)"));
+             result = sVersionString;
+             break;
+         }
 -- 
-2.52.0
+2.53.0
 
