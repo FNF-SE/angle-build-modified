@@ -1,0 +1,30 @@
+From 7ac6894796b7188c40bbae128f0f6b132c4e3a76 Mon Sep 17 00:00:00 2001
+From: Homura <egzozu.be.bas@gmail.com>
+Date: Mon, 23 Feb 2026 20:54:46 +0300
+Subject: [PATCH 3/4] force enable Intel OpenGL ES drivers
+
+---
+ src/libANGLE/renderer/gl/wgl/DisplayWGL.cpp | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/src/libANGLE/renderer/gl/wgl/DisplayWGL.cpp b/src/libANGLE/renderer/gl/wgl/DisplayWGL.cpp
+index 443be9c79d..36d5fceaad 100644
+--- a/src/libANGLE/renderer/gl/wgl/DisplayWGL.cpp
++++ b/src/libANGLE/renderer/gl/wgl/DisplayWGL.cpp
+@@ -293,13 +293,6 @@ egl::Error DisplayWGL::initializeImpl(egl::Display *display)
+                   "robustness.";
+     }
+ 
+-    // Intel OpenGL ES drivers are not currently supported due to bugs in the driver and ANGLE
+-    VendorID vendor = GetVendorID(functionsGL);
+-    if (requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE && IsIntel(vendor))
+-    {
+-        return egl::Error(EGL_NOT_INITIALIZED, "Intel OpenGL ES drivers are not supported.");
+-    }
+-
+     // Create DXGI swap chains for windows that come from other processes.  Windows is unable to
+     // SetPixelFormat on windows from other processes when a sandbox is enabled.
+     HDC nativeDisplay = display->getNativeDisplayId();
+-- 
+2.53.0.windows.1
+
